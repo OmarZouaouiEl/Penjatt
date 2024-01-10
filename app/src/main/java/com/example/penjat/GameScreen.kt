@@ -1,11 +1,10 @@
 package com.example.penjat
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -13,16 +12,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavController
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 
 // GameScreen.kt
+fun generateRandomWord(difficulty: MainActivity.Difficulty): String {
+    // Lógica para generar una palabra aleatoria basada en la dificultad
+    // (puedes implementar tu propia lógica aquí)
+    val words = when (difficulty) {
+        MainActivity.Difficulty.EASY -> listOf("rata", "pata", "moco")
+        MainActivity.Difficulty.MEDIUM -> listOf("auricular", "girafa", "mancuerna")
+        MainActivity.Difficulty.HARD -> listOf("cableado", "tecleado", "relajadamente")
+    }
+    return words.random()
+}
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GameScreen(navController: NavController, difficulty: Difficulty) {
+fun GameScreen(navController: NavController, difficulty: MainActivity.Difficulty) {
     var wordToGuess by remember { mutableStateOf(generateRandomWord(difficulty)) }
     var guessedWord by remember { mutableStateOf("_".repeat(wordToGuess.length)) }
     var remainingAttempts by remember { mutableStateOf(difficulty.maxAttempts) }
@@ -38,7 +51,11 @@ fun GameScreen(navController: NavController, difficulty: Difficulty) {
     ) {
         Text(
             text = "Remaining Attempts: $remainingAttempts",
-            style = MaterialTheme.typography.h6
+            style = TextStyle(
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.1.sp
+            )
         )
 
         Image(
@@ -52,7 +69,11 @@ fun GameScreen(navController: NavController, difficulty: Difficulty) {
 
         Text(
             text = "Word: $guessedWord",
-            style = MaterialTheme.typography.h4
+            style = TextStyle(
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.1.sp
+            )
         )
 
         // TextField para introducir letras
@@ -97,7 +118,10 @@ fun GameScreen(navController: NavController, difficulty: Difficulty) {
                                 for (i in wordToGuess.indices) {
                                     if (wordToGuess[i] == letter) {
                                         guessedWord =
-                                            guessedWord.substring(0, i) + letter + guessedWord.substring(i + 1)
+                                            guessedWord.substring(
+                                                0,
+                                                i
+                                            ) + letter + guessedWord.substring(i + 1)
                                     }
                                 }
                             }
@@ -110,38 +134,40 @@ fun GameScreen(navController: NavController, difficulty: Difficulty) {
 
         if (remainingAttempts == 0 || guessedWord == wordToGuess) {
             // Mostrar mensaje de victoria o derrota
-            ResultButton(
-                onClick = {
-                    // Manejar clic en el botón de resultado (nuevo juego o volver al menú)
-                    navController.navigate(ResultScreen()(isVictory = remainingAttempts > 0, difficulty = difficulty))
-                },
-                label = if (remainingAttempts > 0) "Continue" else "New Game"
+            val route = Routes.ResultScreen.createRoute(
+                isVictory = remainingAttempts > 0,
+                difficulty = difficulty
             )
+            navController.navigate(route)
         }
     }
-}
 
-@Composable
-fun LetterButton(letter: Char, onClick: () -> Unit, enabled: Boolean) {
-    Button(
-        onClick = onClick,
-        enabled = enabled,
-        modifier = Modifier
-            .width(40.dp)
-            .height(40.dp)
-    ) {
-        Text(text = letter.toString())
+
+
+
+
+    @Composable
+    fun LetterButton(letter: Char, onClick: () -> Unit, enabled: Boolean) {
+        Button(
+            onClick = onClick,
+            enabled = enabled,
+            modifier = Modifier
+                .width(40.dp)
+                .height(40.dp)
+        ) {
+            Text(text = letter.toString())
+        }
     }
-}
 
-@Composable
-fun ResultButton(onClick: () -> Unit, label: String) {
-    Button(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
-    ) {
-        Text(text = label)
+    @Composable
+    fun ResultButton(onClick: () -> Unit, label: String) {
+        Button(
+            onClick = onClick,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Text(text = label)
+        }
     }
 }

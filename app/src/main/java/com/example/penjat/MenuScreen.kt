@@ -21,12 +21,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.runtime.setValue
+
 
 // MenuScreen.kt
 
 @Composable
 fun MenuScreen(navController: NavController) {
-    var selectedDifficulty by remember { mutableStateOf(Difficulty.EASY) }
+    var selectedDifficulty by remember { mutableStateOf("easy") }
+    var expanded:Boolean
 
     Box(
         modifier = Modifier
@@ -41,16 +46,14 @@ fun MenuScreen(navController: NavController) {
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // ... (Otros botones existentes)
 
-            // Dropdown para seleccionar la dificultad
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(8.dp)
             ) {
                 Text(
-                    text = "Difficulty: ${selectedDifficulty.name}",
+                    text = "Difficulty: ${selectedDifficulty}",
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
@@ -65,21 +68,21 @@ fun MenuScreen(navController: NavController) {
                         .fillMaxWidth()
                         .padding(8.dp)
                 ) {
-                    DropdownMenuItem(onClick = {
-                        selectedDifficulty = Difficulty.EASY
-                    }) {
-                        Text(text = "Easy")
-                    }
-                    DropdownMenuItem(onClick = {
-                        selectedDifficulty = Difficulty.MEDIUM
-                    }) {
-                        Text(text = "Medium")
-                    }
-                    DropdownMenuItem(onClick = {
-                        selectedDifficulty = Difficulty.HARD
-                    }) {
-                        Text(text = "Hard")
-                    }
+                    DropdownMenuItem(text = { Text(text = "easy") }, onClick = {
+                        expanded = false
+                        selectedDifficulty = "Easy"
+                    })
+
+                    DropdownMenuItem(text = { Text(text = "medium") }, onClick = {
+                        expanded = false
+                        selectedDifficulty = "Medium"
+                    })
+
+                    DropdownMenuItem(text = { Text(text = "hard") }, onClick = {
+                        expanded = false
+                        selectedDifficulty= "Hard"
+                    })
+
                 }
             }
         }
@@ -87,7 +90,7 @@ fun MenuScreen(navController: NavController) {
         // Botón para iniciar el juego con la dificultad seleccionada
         Button(
             onClick = {
-                navController.navigate(Routes.GameScreen.route(selectedDifficulty.name))
+                navController.navigate(Routes.gameScreen(selectedDifficulty))
             },
             modifier = Modifier
                 .fillMaxWidth()
@@ -97,6 +100,8 @@ fun MenuScreen(navController: NavController) {
             Spacer(modifier = Modifier.width(4.dp))
             Text(text = "Start New Game")
         }
+
+
     }
 }
 

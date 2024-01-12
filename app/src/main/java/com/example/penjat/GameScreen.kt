@@ -25,13 +25,11 @@ import kotlin.random.Random
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameScreen(navController: NavController, difficulty: Difficulty) {
-    var wordToGuess by remember { mutableStateOf("") }
+    var wordToGuess by remember { mutableStateOf(generateRandomWord(difficulty = difficulty)) }
     var guessedWord by remember { mutableStateOf(wordToGuess.replace("[a-zA-Z]".toRegex(), "_")) }
     var remainingAttempts by remember { mutableStateOf(difficulty.maxAttempts) }
     var enteredLetters by remember { mutableStateOf(mutableSetOf<Char>()) }
     var inputText by remember { mutableStateOf(TextFieldValue()) }
-
-
 
     fun generateRandomWord(difficulty: Difficulty): String {
         val words = when (difficulty) {
@@ -42,6 +40,7 @@ fun GameScreen(navController: NavController, difficulty: Difficulty) {
         return words.random().uppercase()
     }
 
+    val letters = ('A'..'Z').toList()
     wordToGuess = generateRandomWord(difficulty = difficulty)
 
     Column(
@@ -78,42 +77,27 @@ fun GameScreen(navController: NavController, difficulty: Difficulty) {
             )
         )
 
-        TextField(
-            value = inputText,
-            onValueChange = {
-                inputText = it
-            },
-            label = { Text("Enter a letter") },
-            keyboardOptions = KeyboardOptions.Default.copy(
-                keyboardType = KeyboardType.Text,
-                imeAction = ImeAction.Done
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = {
+        val chunkedLetters = letters.chunked(6)
+        chunkedLetters.forEach { row ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                row.forEach { letter ->
+                    LetterButton(
+                        letter = letter,
+                        onClick = {
+                            var Funciona: Boolean =
+                                handleLetterClick(letter, enteredLetters, wordToGuess, guessedWord, remainingAttempts)
+                            if (!Funciona) {
+                                remainingAttempts--
+                            }
+                        },
+                        enabled = !enteredLetters.contains(letter)
+                    )
                 }
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        )
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            for (letter in 'A'..'Z') {
-                LetterButton(
-                    letter = letter,
-                    onClick = {
-                        var Funciona: Boolean =  handleLetterClick(letter, enteredLetters, wordToGuess, guessedWord, remainingAttempts)
-                        if (!Funciona){
-                           remainingAttempts--
-                        }
-                    },
-                    enabled = !enteredLetters.contains(letter)
-                )
             }
         }
 
@@ -129,14 +113,11 @@ fun LetterButton(letter: Char, onClick: () -> Unit, enabled: Boolean) {
         onClick = onClick,
         enabled = enabled,
         modifier = Modifier
-            //.width(40.dp)
-            .height(80.dp)
+            .size(60.dp)
     ) {
         Text(text = letter.toString())
     }
 }
-
-//
 
 private fun handleLetterClick(
     letter: Char,
@@ -147,15 +128,13 @@ private fun handleLetterClick(
 ): Boolean {
     if (letter !in enteredLetters) {
         enteredLetters.add(letter)
-       if (letter in enteredLetters)
+        if (letter in enteredLetters)
             updateGuessedWord(letter, wordToGuess, guessedWord)
 
         return true
     }
     return false
 }
-
-
 
 private fun updateGuessedWord(letter: Char, wordToGuess: String, guessedWord: String): String {
     val updatedGuessedWord = StringBuilder(guessedWord)
@@ -167,8 +146,6 @@ private fun updateGuessedWord(letter: Char, wordToGuess: String, guessedWord: St
     return updatedGuessedWord.toString()
 }
 
-
-
 private fun navigateToResultScreen(navController: NavController, remainingAttempts: Int, difficulty: Difficulty) {
     val route = Routes.ResultScreen.createRoute(isVictory = remainingAttempts > 0, difficulty = difficulty)
     navController.navigate(route)
@@ -176,7 +153,7 @@ private fun navigateToResultScreen(navController: NavController, remainingAttemp
 
 private fun generateRandomWord(difficulty: Difficulty): String {
     val words = when (difficulty) {
-        Difficulty.EASY -> listOf("manzana", "Banana", "Naranja", "Grapa", "melon")
+        Difficulty.EASY -> listOf("AAAAA", "Banana", "Naranja", "Grapa", "melon")
         Difficulty.MEDIUM -> listOf("elefante", "girafa", "cablejat", "titani", "zebra")
         Difficulty.HARD -> listOf("exagerar", "contrasenya", "ambiguity", "altavoz", "perpendicular")
     }

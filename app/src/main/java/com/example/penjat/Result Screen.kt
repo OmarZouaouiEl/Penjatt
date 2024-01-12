@@ -1,8 +1,5 @@
 package com.example.penjat
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -12,14 +9,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 
-// ResultScreen.kt
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ResultScreen(isVictory: Boolean, navController: NavController, difficulty: String) {
+fun ResultScreen(isVictory: Boolean, navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -28,20 +24,26 @@ fun ResultScreen(isVictory: Boolean, navController: NavController, difficulty: S
         verticalArrangement = Arrangement.SpaceEvenly
     ) {
         Text(
-            text = if (isVictory) "Victory!" else "Game Over!",
-            style = TextStyle.Default.copy(
+            text = if (isVictory) "Victory!" else "Defeat!",
+            style = TextStyle(
                 fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
+                letterSpacing = 0.1.sp,
                 color = if (isVictory) Color.Green else Color.Red
             )
         )
 
         Button(
             onClick = {
-                navController.navigate(Routes.MenuScreen.route)
+                navigateToMenuScreen(navController)
             }
         ) {
-            Text(text = "Return to Menu")
+            Text(text = "Back to Menu")
         }
     }
+}
+
+private fun navigateToMenuScreen(navController: NavController) {
+    val route = Routes.MenuScreen.route
+    navController.navigate(route)
 }

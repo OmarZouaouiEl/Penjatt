@@ -12,35 +12,37 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
-
-// GameScreen.kt
-fun generateRandomWord(difficulty: MainActivity.Difficulty): String {
-    // Lógica para generar una palabra aleatoria basada en la dificultad
-    // (puedes implementar tu propia lógica aquí)
-    val words = when (difficulty) {
-        MainActivity.Difficulty.EASY -> listOf("rata", "pata", "moco")
-        MainActivity.Difficulty.MEDIUM -> listOf("auricular", "girafa", "mancuerna")
-        MainActivity.Difficulty.HARD -> listOf("cableado", "tecleado", "relajadamente")
-    }
-    return words.random()
-}
+import androidx.compose.ui.unit.sp
+import kotlin.random.Random
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GameScreen(navController: NavController, difficulty: MainActivity.Difficulty) {
-    var wordToGuess by remember { mutableStateOf(generateRandomWord(difficulty)) }
-    var guessedWord by remember { mutableStateOf("_".repeat(wordToGuess.length)) }
+fun GameScreen(navController: NavController, difficulty: Difficulty) {
+    var wordToGuess by remember { mutableStateOf("") }
+    var guessedWord by remember { mutableStateOf(wordToGuess.replace("[a-zA-Z]".toRegex(), "_")) }
     var remainingAttempts by remember { mutableStateOf(difficulty.maxAttempts) }
     var enteredLetters by remember { mutableStateOf(mutableSetOf<Char>()) }
     var inputText by remember { mutableStateOf(TextFieldValue()) }
+
+
+
+    fun generateRandomWord(difficulty: Difficulty): String {
+        val words = when (difficulty) {
+            Difficulty.EASY -> listOf("apple", "banana", "orange", "grape", "melon")
+            Difficulty.MEDIUM -> listOf("elephant", "giraffe", "rhinoceros", "hippopotamus", "zebra")
+            Difficulty.HARD -> listOf("exaggerate", "serendipity", "ambiguity", "preposterous", "perpendicular")
+        }
+        return words.random().uppercase()
+    }
+
+    wordToGuess = generateRandomWord(difficulty = difficulty)
 
     Column(
         modifier = Modifier
@@ -59,7 +61,7 @@ fun GameScreen(navController: NavController, difficulty: MainActivity.Difficulty
         )
 
         Image(
-            painter = painterResource(id = R.drawable.hangman_image),
+            painter = painterResource(id = R.drawable.colgate),
             contentDescription = null,
             modifier = Modifier
                 .size(200.dp)
@@ -76,12 +78,10 @@ fun GameScreen(navController: NavController, difficulty: MainActivity.Difficulty
             )
         )
 
-        // TextField para introducir letras
         TextField(
             value = inputText,
             onValueChange = {
                 inputText = it
-                // Puedes manejar la lógica de entrada aquí
             },
             label = { Text("Enter a letter") },
             keyboardOptions = KeyboardOptions.Default.copy(
@@ -90,7 +90,6 @@ fun GameScreen(navController: NavController, difficulty: MainActivity.Difficulty
             ),
             keyboardActions = KeyboardActions(
                 onDone = {
-                    // Puedes manejar la lógica al presionar "Done" aquí
                 }
             ),
             modifier = Modifier
@@ -98,7 +97,6 @@ fun GameScreen(navController: NavController, difficulty: MainActivity.Difficulty
                 .padding(16.dp)
         )
 
-        // Botones de letras
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -109,22 +107,9 @@ fun GameScreen(navController: NavController, difficulty: MainActivity.Difficulty
                 LetterButton(
                     letter = letter,
                     onClick = {
-                        if (!enteredLetters.contains(letter)) {
-                            enteredLetters.add(letter)
-                            if (!wordToGuess.contains(letter)) {
-                                remainingAttempts--
-                            } else {
-                                // Actualizar guessedWord con letras adivinadas correctamente
-                                for (i in wordToGuess.indices) {
-                                    if (wordToGuess[i] == letter) {
-                                        guessedWord =
-                                            guessedWord.substring(
-                                                0,
-                                                i
-                                            ) + letter + guessedWord.substring(i + 1)
-                                    }
-                                }
-                            }
+                        var Funciona: Boolean =  handleLetterClick(letter, enteredLetters, wordToGuess, guessedWord, remainingAttempts)
+                        if (!Funciona){
+                           remainingAttempts--
                         }
                     },
                     enabled = !enteredLetters.contains(letter)
@@ -133,41 +118,67 @@ fun GameScreen(navController: NavController, difficulty: MainActivity.Difficulty
         }
 
         if (remainingAttempts == 0 || guessedWord == wordToGuess) {
-            // Mostrar mensaje de victoria o derrota
-            val route = Routes.ResultScreen.createRoute(
-                isVictory = remainingAttempts > 0,
-                difficulty = difficulty
-            )
-            navController.navigate(route)
+            navigateToResultScreen(navController, remainingAttempts, difficulty)
         }
     }
+}
+
+@Composable
+fun LetterButton(letter: Char, onClick: () -> Unit, enabled: Boolean) {
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = Modifier
+            //.width(40.dp)
+            .height(80.dp)
+    ) {
+        Text(text = letter.toString())
+    }
+}
+
+//
+
+private fun handleLetterClick(
+    letter: Char,
+    enteredLetters: MutableSet<Char>,
+    wordToGuess: String,
+    guessedWord: String,
+    remainingAttempts: Int
+): Boolean {
+    if (letter !in enteredLetters) {
+        enteredLetters.add(letter)
+       if (letter in enteredLetters)
+            updateGuessedWord(letter, wordToGuess, guessedWord)
+
+        return true
+    }
+    return false
+}
 
 
 
-
-
-    @Composable
-    fun LetterButton(letter: Char, onClick: () -> Unit, enabled: Boolean) {
-        Button(
-            onClick = onClick,
-            enabled = enabled,
-            modifier = Modifier
-                .width(40.dp)
-                .height(40.dp)
-        ) {
-            Text(text = letter.toString())
+private fun updateGuessedWord(letter: Char, wordToGuess: String, guessedWord: String): String {
+    val updatedGuessedWord = StringBuilder(guessedWord)
+    for (i in wordToGuess.indices) {
+        if (wordToGuess[i] == letter) {
+            updatedGuessedWord[i] = letter
         }
     }
+    return updatedGuessedWord.toString()
+}
 
-    @Composable
-    fun ResultButton(onClick: () -> Unit, label: String) {
-        Button(
-            onClick = onClick,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Text(text = label)
-        }
+
+
+private fun navigateToResultScreen(navController: NavController, remainingAttempts: Int, difficulty: Difficulty) {
+    val route = Routes.ResultScreen.createRoute(isVictory = remainingAttempts > 0, difficulty = difficulty)
+    navController.navigate(route)
+}
+
+private fun generateRandomWord(difficulty: Difficulty): String {
+    val words = when (difficulty) {
+        Difficulty.EASY -> listOf("manzana", "Banana", "Naranja", "Grapa", "melon")
+        Difficulty.MEDIUM -> listOf("elefante", "girafa", "cablejat", "titani", "zebra")
+        Difficulty.HARD -> listOf("exagerar", "contrasenya", "ambiguity", "altavoz", "perpendicular")
     }
+    return words.random().uppercase()
 }

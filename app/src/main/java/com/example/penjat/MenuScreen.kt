@@ -1,109 +1,92 @@
 package com.example.penjat
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.PlayArrow
-import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.runtime.setValue
 
-
-// MenuScreen.kt
 
 @Composable
 fun MenuScreen(navController: NavController) {
-    var selectedDifficulty by remember { mutableStateOf("easy") }
-    var expanded:Boolean
+    var selectedDifficulty by remember { mutableStateOf<Difficulty?>(null) }
 
-    Box(
+    Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Gray),
-        contentAlignment = Alignment.Center
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceEvenly
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
+        Text(
+            text = "Select Difficulty",
+            style = TextStyle(
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.1.sp
+            )
+        )
 
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
-            ) {
-                Text(
-                    text = "Difficulty: ${selectedDifficulty}",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
+        DifficultyButton(
+            difficulty = Difficulty.EASY,
+            selectedDifficulty = selectedDifficulty,
+            onClick = { selectedDifficulty = Difficulty.EASY }
+        )
 
-                        }
-                        .padding(8.dp)
-                )
-                DropdownMenu(
-                    expanded = false,
-                    onDismissRequest = { /* No hacemos nada al cerrar */ },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp)
-                ) {
-                    DropdownMenuItem(text = { Text(text = "easy") }, onClick = {
-                        expanded = false
-                        selectedDifficulty = "Easy"
-                    })
+        DifficultyButton(
+            difficulty = Difficulty.MEDIUM,
+            selectedDifficulty = selectedDifficulty,
+            onClick = { selectedDifficulty = Difficulty.MEDIUM }
+        )
 
-                    DropdownMenuItem(text = { Text(text = "medium") }, onClick = {
-                        expanded = false
-                        selectedDifficulty = "Medium"
-                    })
+        DifficultyButton(
+            difficulty = Difficulty.HARD,
+            selectedDifficulty = selectedDifficulty,
+            onClick = { selectedDifficulty = Difficulty.HARD }
+        )
 
-                    DropdownMenuItem(text = { Text(text = "hard") }, onClick = {
-                        expanded = false
-                        selectedDifficulty= "Hard"
-                    })
-
-                }
-            }
-        }
-
-        // Botón para iniciar el juego con la dificultad seleccionada
         Button(
             onClick = {
-                navController.navigate(Routes.gameScreen(selectedDifficulty))
+                selectedDifficulty?.let {
+                    navigateToGameScreen(navController, it)
+                }
             },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
+            enabled = selectedDifficulty != null
         ) {
-            Icon(imageVector = Icons.Outlined.PlayArrow, contentDescription = null)
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(text = "Start New Game")
+            Text(text = "Start Game")
         }
-
-
     }
 }
 
+@Composable
+fun DifficultyButton(difficulty: Difficulty, selectedDifficulty: Difficulty?, onClick: () -> Unit) {
+    val isSelected = difficulty == selectedDifficulty
 
+    Button(
+        onClick = onClick,
+        modifier = Modifier
+            .padding(8.dp)
+            .fillMaxWidth(),
+        colors = ButtonDefaults.buttonColors(
+        )
+    ) {
+        Text(text = difficulty.name, color = if (isSelected) Color.White else Color.Black)
+    }
+}
 
+fun navigateToGameScreen(navController: NavController, difficulty: Difficulty) {
+    val route = Routes.GameScreen.createRoute(difficulty)
+    navController.navigate(route)
+}
